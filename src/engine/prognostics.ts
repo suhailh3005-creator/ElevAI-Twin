@@ -1,0 +1,4 @@
+import type { TwinState } from '../types';
+import { clamp, stress, THRESHOLD } from './degradation';
+export function contributions(t: TwinState, baseline: TwinState) { const terms = [{ name: 'Degradation state', value: 5.2 * (t.degradation / THRESHOLD) ** 2 }, { name: 'Vibration', value: .7 * Math.max(0, (t.vibrationRms - 3.5) / 4) }, { name: 'Temperature', value: .5 * Math.max(0, (t.temperatureC - 65) / 20) }, { name: 'Current', value: .3 * Math.max(0, (t.currentA - 18) / 6) }, { name: 'Fault frequency', value: .4 * t.faultEvents30d / 3 }, { name: 'Operating stress', value: .6 * (stress(t) / stress(baseline) - 1) }]; const total = terms.reduce((a, x) => a + Math.max(0, x.value), 0); return terms.map(x => ({ ...x, pct: total ? Math.max(0, x.value) / total * 100 : 0 })).sort((a, b) => b.pct - a.pct); }
+export const risk = (t: TwinState, baseline = t) => clamp(1 / (1 + Math.exp(-(-2.744 + contributions(t, baseline).reduce((a, x) => a + x.value, 0)))), .01, .99);

@@ -1,0 +1,74 @@
+ElevAI Twin - Updated Project
+
+START LOCALLY
+1. Extract the ZIP and open a terminal in the ElevAI-Twin folder.
+2. Install Node.js 20.19+ with npm if needed.
+3. Run:
+
+   npm ci
+   npm run dev -- --port 5174 --strictPort
+
+4. Open http://127.0.0.1:5174/ and keep the terminal running.
+   If that port is occupied by another copy, stop the other copy or choose a
+   different port. Do not open index.html directly.
+
+The initial dependency installation needs internet. Dependencies and generated
+build files are excluded from this source archive.
+
+CURRENT FEATURES
+The registry starts empty in a new browser. Add an elevator and enter readings,
+or explicitly choose the labeled sample autofill option. Digital Twin includes
+17 selectable 3D components, smooth camera/assembly controls, and manual
+inspection assessments for Brake, Gearbox, VFD/Drive and Traction Sheave (including Rope Slip).
+Enter these in Add Elevator, or connect Field Lab for telemetry/replay.
+Field Lab adds independent-label validation, component trends, component-aware
+AI/planning, technician work orders and local deployment/calibration tools.
+
+LOCAL RECORDS
+Motor records and the dashboard registry use browser localStorage. Field Lab
+component observations, profiles, labels and work orders use the persistent
+server database .data/field-lab.json. Export both backups when moving systems.
+To move existing records, export a backup from the original app and import it
+in the new browser. Use the same host and port to access the same browser origin.
+This ZIP contains no browser-saved elevator records or test artifacts.
+
+OPTIONAL AI
+Copy .env.example to .env.local and supply your own OPENAI_API_KEY. API keys
+and private local environment files are excluded from this ZIP. AI access
+requires valid credentials and available API quota. Other features work locally.
+
+BUILD AND TEST
+   npm test
+   npm run build
+   npm run preview
+
+The build command generates dist/. The preview command serves the resulting
+build. Use the full project for the server-side AI integration, not dist/ alone. Field Lab also requires the full local server.
+Install development dependencies as well (do not use npm ci --omit=dev).
+
+Current browser checks require Microsoft Edge and the app on port 5174:
+   node scripts/manual-check.mjs
+   node scripts/usage-check.mjs
+   node scripts/twin3d-check.mjs
+   node scripts/inspection-check.mjs
+   node scripts/field-check.mjs (starts its own isolated server)
+
+Run manual-check first to generate the isolated fixture used by the other
+checks. Historical scripts remain included; live AI checks may make billable
+provider requests and are not required for ordinary local setup.
+
+DOCUMENTATION
+CURRENT-WORKFLOW.md          Manual records and existing workflows
+USAGE-INCREMENT.md           Operational usage analysis
+3D-EXTENSION.md              Initial 3D visualization milestone
+COMPONENT-INTELLIGENCE.md    Initial inspections and smooth-motion update
+COMPONENT-OBSERVATIONS.md    Add Elevator inputs and component randomization
+FIELD-LAB.md                Six Field Lab modules, telemetry and deployment
+
+The component thresholds are project-supplied assumptions. Risk/health indices
+are decision support, not certified safety states or failure probabilities.
+Unsupported remaining-life/probability estimates are unavailable.
+
+Digital Twin: click to focus; double-click to separate; Return component reverses it.
+Normal is white, warning amber, critical red and unknown gray.
+RUL is explicitly experimental: see CORRECTION-HOLOGRAM.md for model assumptions.

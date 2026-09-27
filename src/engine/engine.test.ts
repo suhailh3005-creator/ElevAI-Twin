@@ -1,0 +1,24 @@
+import { describe,it,expect } from 'vitest';
+import { seedTwin,defaultScenario,defaultWeights } from '../data/seed';
+import { health,stress,project,rul } from './degradation';
+import { risk } from './prognostics';
+import { uncertainty } from './uncertainty';
+import { optimize,changeWeight } from './optimizer';
+import { intervene } from './interventions';
+const t=seedTwin(),s={...defaultScenario,trafficChangePct:40},p=project(t,s);
+describe('closed-loop motor engine',()=>{
+it('derives health and clamps bounds',()=>{expect(health(.37)).toBe(63);expect(health(2)).toBe(0);expect(health(-1)).toBe(100)});
+it('computes nominal stress and baseline outputs',()=>{expect(stress(t)).toBeGreaterThan(1);expect(rul(t)).toBeGreaterThan(6);expect(rul(t)).toBeLessThan(7);expect(risk(t)).toBeGreaterThan(.65);expect(risk(t)).toBeLessThan(.7)});
+it('projects 40% traffic into telemetry and shorter RUL',()=>{expect(p.dailyCycles).toBe(588);expect(p.temperatureC).toBeCloseTo(79.2);expect(rul(p)).toBeGreaterThan(4);expect(rul(p)).toBeLessThan(5);expect(risk(p,t)).toBeGreaterThan(risk(t))});
+it('preserves newly published operating telemetry under a neutral scenario',()=>{const updated={...t,averageLoadPct:78,dailyCycles:500};const neutral=project(updated,defaultScenario);expect(neutral.averageLoadPct).toBe(78);expect(neutral.dailyCycles).toBe(500);expect(stress(neutral)).toBe(stress(updated));});
+it('selects the lowest feasible score',()=>{const result=optimize(defaultWeights,true,.25);expect(result[0].name).toBe('Replace');expect(result[0].valid).toBe(true);expect(result.at(-1)?.name).toBe('Repair')});
+it('changes recommendation when cost dominates',()=>{expect(optimize(changeWeight(defaultWeights,'Cost',100),false,.25)[0].name).toBe('Repair')});
+it('keeps weights normalized even from a one-hot vector',()=>{const w=changeWeight(changeWeight(defaultWeights,'Safety',100),'Safety',20);expect(Object.values(w).reduce((a,b)=>a+b,0)).toBe(100);expect(Object.values(w).every(v=>v>=0)).toBe(true)});
+it('returns no valid option under 3% tolerance',()=>{expect(optimize(defaultWeights,true,.03).every(o=>!o.valid)).toBe(true)});
+it('replacement changes real state without mutating baseline',()=>{const a=intervene(t,'Replace');expect(a.degradation).toBe(.04);expect(a.revision).toBe(43);expect(a.totalCycles).toBe(0);expect(t.degradation).toBe(.37);expect(risk(a)).toBeLessThan(risk(t));expect(rul(a)).toBeGreaterThan(rul(t))});
+it('repair preserves age and cycles and reduces faults',()=>{const a=intervene(t,'Repair');expect(a.ageYears).toBe(t.ageYears);expect(a.totalCycles).toBe(t.totalCycles);expect(a.faultEvents30d).toBe(1)});
+it('modernization records efficiency improvement',()=>expect(intervene(t,'Modernize').efficiencyImprovementPct).toBe(21));
+it('Monte Carlo is reproducible with ordered percentiles',()=>{const a=uncertainty(t,defaultScenario);expect(a).toEqual(uncertainty(t,defaultScenario));expect(a.p05).toBeLessThan(a.p50);expect(a.p50).toBeLessThan(a.p95);expect(a.samples).toBe(500)});
+it('abstains for extreme scenarios or missing sensor data',()=>{expect(uncertainty(t,{trafficChangePct:60,loadChangePct:30,ambientTemperatureDelta:15,horizon:6}).confidence).toBe('LOW');expect(uncertainty({...t,temperatureC:NaN},defaultScenario).confidence).toBe('LOW')});
+it('RUL reaches zero at intervention threshold',()=>{expect(rul({...t,degradation:.55})).toBe(0);expect(uncertainty({...t,degradation:.55},defaultScenario).p50).toBe(0)});
+});

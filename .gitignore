@@ -1,0 +1,10 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.sites-runtime/
+test-results/
+.env.local
+.env.*.local
+.vite-cache*/
+
+.data/

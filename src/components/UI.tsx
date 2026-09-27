@@ -1,0 +1,12 @@
+import { useEffect, useRef, type ReactNode } from 'react';
+import { Info, X } from 'lucide-react';
+import { n, time } from '../utils/format';
+import type { TwinEvent } from '../types';
+export const Badge = ({children}:{children:ReactNode}) => <span className="badge">{children}</span>;
+export const Tip = ({text}:{text:string}) => <span className="tip" tabIndex={0} aria-label={text}><Info size={13}/><span role="tooltip">{text}</span></span>;
+export const Header = ({eyebrow,title,description,action}:{eyebrow:string;title:string;description:string;action?:ReactNode}) => <header className="page-heading"><div><div className="eyebrow">{eyebrow}</div><h1>{title}</h1><p>{description}</p></div>{action}</header>;
+export function Metric({label,value,unit,source='MODEL OUTPUT',note,tip}:{label:string;value:string;unit?:string;source?:string;note?:string;tip?:string}){return <div className="metric"><div className="metric-label">{label}{tip&&<Tip text={tip}/>}</div><div className="metric-number">{value}<small>{unit}</small></div><div className="metric-foot"><Badge>{source}</Badge>{note&&<span>{note}</span>}</div></div>}
+export const RUL_TIP='RUL indicates estimated time until the configured intervention threshold, not guaranteed physical failure time.';
+export function Timeline({events}:{events:TwinEvent[]}){return <div className="timeline">{events.map(e=><div className="event" key={e.id}><span className="event-dot"/><div><strong>{e.title}</strong><small>{time(e.timestamp)} · Revision {e.revision} · {e.description}</small></div></div>)}</div>}
+export function Slider({label,value,min,max,unit,onChange}:{label:string;value:number;min:number;max:number;unit:string;onChange:(v:number)=>void}){return <label className="slider"><span>{label}<b>{value>0?'+':''}{n(value,0)}{unit}</b></span><input type="range" min={min} max={max} value={value} onChange={e=>onChange(Number(e.target.value))}/><small>{min}{unit}<span>{max}{unit}</span></small></label>}
+export function Modal({title,children,onClose}:{title:string;children:ReactNode;onClose:()=>void}){const ref=useRef<HTMLDialogElement>(null);useEffect(()=>{const d=ref.current; d?.showModal();return()=>d?.close()},[]);return <dialog ref={ref} onCancel={onClose} onClick={e=>{if(e.target===e.currentTarget)onClose()}}><div className="modal-title"><h2>{title}</h2><button className="icon-button" aria-label="Close dialog" onClick={onClose}><X size={20}/></button></div>{children}</dialog>}
